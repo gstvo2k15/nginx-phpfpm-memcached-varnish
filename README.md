@@ -1,3 +1,11 @@
+# Introduction
+
+This PoC validates a classic web application stack based on Varnish, Nginx, PHP-FPM and Memcached on Ubuntu 24.04.
+
+Varnish acts as the HTTP reverse proxy cache, Nginx serves as the backend web server, PHP-FPM executes PHP code, and Memcached provides application-level caching.
+
+The project demonstrates service chaining, request flow, backend troubleshooting, and the separation between HTTP caching and application object caching.
+
 **Proyect diagram**: 
 ```bash
 Client
