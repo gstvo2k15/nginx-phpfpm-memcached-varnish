@@ -56,22 +56,31 @@ Zend Engine v4.3.11, Copyright (c) Zend Technologies
 ```bash
 /etc/nginx/sites-available/default
 server {
-    listen 8080;
-    server_name _;
+    listen 8080 default_server;
+    listen [::]:8080 default_server;
 
+    server_name _;
     root /var/www/html;
-    index index.php index.html;
+    index index.php index.html index.htm;
 
     location / {
-        try_files $uri $uri/ =404;
+        try_files $uri $uri/ /index.php?$query_string;
     }
 
-    location ~ \\.php$ {
+    location ~ \.php$ {
         include snippets/fastcgi-php.conf;
         fastcgi_pass unix:/run/php/php8.3-fpm.sock;
     }
 
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
 }
+
+cat >/var/www/html/index.php <<'EOF'
+<?php
+echo "php-fpm backend OK\n";
+EOF
 ```
 
 ### PHP-FPM
@@ -108,6 +117,23 @@ backend default {
 DAEMON_OPTS="-a :80 \
              -T localhost:6082 \
              -f /etc/varnish/default.vcl"
+
+cat /usr/lib/systemd/system/varnish.service
+[Unit]
+Description=Varnish Cache, a high-performance HTTP accelerator
+Documentation=https://www.varnish-cache.org/docs/ man:varnishd
+
+[Service]
+Type=exec
+LimitNOFILE=131072
+LimitMEMLOCK=85983232
+ExecStart=/usr/sbin/varnishd \
+          -F \
+          -a :80 \
+          -T localhost:6082 \
+          -f /etc/varnish/default.vcl \
+          -S /etc/varnish/secret \
+          -s malloc,256m
 ```
 
 ```bash
